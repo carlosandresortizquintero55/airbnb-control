@@ -3,15 +3,17 @@ import { requireUser } from "@/lib/auth";
 import { getListings, getLowStockCountsByListing } from "@/lib/data/listings";
 import { getBuildings } from "@/lib/data/buildings";
 import { getWarehouses, getLowStockCountForWarehouse } from "@/lib/data/warehouses";
+import { getInventorySummary } from "@/lib/data/supplies";
 import { BuildingDiagram } from "@/components/building-diagram";
 
 export default async function InventarioGeneralPage() {
   await requireUser();
 
-  const [listings, buildings, warehouses] = await Promise.all([
+  const [listings, buildings, warehouses, summary] = await Promise.all([
     getListings(),
     getBuildings(),
     getWarehouses(),
+    getInventorySummary(),
   ]);
 
   const lowStockMap = await getLowStockCountsByListing(listings.map((l) => l.id));
@@ -168,6 +170,73 @@ export default async function InventarioGeneralPage() {
           })()}
         </div>
       )}
+
+      <h2 className="mt-10 text-base font-semibold text-slate-900">
+        Resumen por insumo
+      </h2>
+      <p className="mt-1 text-sm text-slate-500">
+        Solo lectura: total de cada insumo sumando todos los lofts y bodegas,
+        y en qué lugar está cada uno. Se edita desde cada loft o bodega.
+      </p>
+
+      <InventorySummaryTable summary={summary} />
+    </div>
+  );
+}
+
+function InventorySummaryTable({
+  summary,
+}: {
+  summary: Awaited<ReturnType<typeof getInventorySummary>>;
+}) {
+  const grouped = summary.reduce<Record<string, typeof summary>>((acc, s) => {
+    (acc[s.category] ??= []).push(s);
+    return acc;
+  }, {});
+
+  return (
+    <div className="mt-4 space-y-6">
+      {Object.entries(grouped).map(([category, items]) => (
+        <div key={category}>
+          <h3 className="text-sm font-semibold capitalize text-slate-700">
+            {category}
+          </h3>
+          <ul className="mt-2 divide-y divide-slate-200 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+            {items.map((item) => (
+              <li key={item.id} className="px-4 py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-slate-900">{item.name}</span>
+                  <span className="text-sm font-medium text-slate-700">
+                    {item.total} {item.unit}
+                  </span>
+                </div>
+                {item.locations.length > 0 && (
+                  <details className="mt-1">
+                    <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-700">
+                      Ver dónde está ({item.locations.length})
+                    </summary>
+                    <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                      {item.locations.map((loc, i) => (
+                        <li
+                          key={i}
+                          className={`rounded-full px-2 py-0.5 text-[11px] ${
+                            loc.kind === "bodega"
+                              ? "bg-indigo-50 text-indigo-700"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                          title={loc.description ?? undefined}
+                        >
+                          {loc.name}: {loc.quantity}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   );
 }
