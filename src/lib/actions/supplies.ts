@@ -12,43 +12,63 @@ export async function createSupplyType(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const unit = String(formData.get("unit") ?? "unidad").trim() || "unidad";
   const category = String(formData.get("category") ?? "aseo").trim() || "aseo";
+  const returnTo = String(formData.get("return_to") ?? "/bodegas");
 
   if (!name) {
-    redirect(`/insumos?error=${encodeURIComponent("El nombre es obligatorio.")}`);
+    redirect(`${returnTo}?error=${encodeURIComponent("El nombre es obligatorio.")}`);
   }
 
   const { error } = await supabase.from("supply_types").insert({ name, unit, category });
 
   if (error) {
-    redirect(`/insumos?error=${encodeURIComponent(error.message)}`);
+    redirect(`${returnTo}?error=${encodeURIComponent(error.message)}`);
   }
 
-  revalidatePath("/insumos");
-  redirect("/insumos");
+  revalidatePath("/bodegas");
+  revalidatePath(returnTo);
+  redirect(returnTo);
 }
 
-export async function setListingStock(formData: FormData) {
+export async function deleteSupplyType(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const supplyTypeId = String(formData.get("supply_type_id") ?? "");
+  const returnTo = String(formData.get("return_to") ?? "/bodegas");
+
+  const { error } = await supabase.from("supply_types").delete().eq("id", supplyTypeId);
+
+  if (error) {
+    const message =
+      error.code === "23503"
+        ? "No se puede borrar: ya está en uso en una bodega o propiedad con historial."
+        : error.message;
+    redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/bodegas");
+  revalidatePath(returnTo);
+  redirect(returnTo);
+}
+
+export async function allocateListingStock(formData: FormData) {
   await requireAdmin();
   const supabase = await createClient();
 
   const listingId = String(formData.get("listing_id") ?? "");
   const supplyTypeId = String(formData.get("supply_type_id") ?? "");
+  const quantity = Number(formData.get("current_quantity") ?? 0);
   const minRaw = formData.get("min_quantity");
-  const currentRaw = formData.get("current_quantity");
+  const minQuantity = minRaw !== null && minRaw !== "" ? Number(minRaw) : null;
+  const description = String(formData.get("description") ?? "").trim();
 
-  const row: {
-    listing_id: string;
-    supply_type_id: string;
-    min_quantity?: number;
-    current_quantity?: number;
-  } = { listing_id: listingId, supply_type_id: supplyTypeId };
-
-  if (minRaw !== null && minRaw !== "") row.min_quantity = Number(minRaw);
-  if (currentRaw !== null && currentRaw !== "") row.current_quantity = Number(currentRaw);
-
-  const { error } = await supabase
-    .from("listing_supply_stock")
-    .upsert(row, { onConflict: "listing_id,supply_type_id" });
+  const { error } = await supabase.rpc("allocate_supply_to_listing", {
+    p_listing_id: listingId,
+    p_supply_type_id: supplyTypeId,
+    p_quantity: quantity,
+    p_min_quantity: minQuantity,
+    p_description: description || null,
+  });
 
   if (error) {
     redirect(
@@ -57,5 +77,7 @@ export async function setListingStock(formData: FormData) {
   }
 
   revalidatePath(`/propiedades/${listingId}`);
+  revalidatePath("/bodegas");
+  revalidatePath("/inventario");
   redirect(`/propiedades/${listingId}?tab=insumos`);
 }

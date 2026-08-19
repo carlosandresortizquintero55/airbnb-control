@@ -32,6 +32,7 @@ export async function getListingStock(listingId: string) {
       category: supply.category,
       current_quantity: row?.current_quantity ?? 0,
       min_quantity: row?.min_quantity ?? 0,
+      description: row?.description ?? null,
     };
   });
 }

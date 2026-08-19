@@ -44,10 +44,10 @@ async function AdminDashboard() {
           Registrar aseo
         </Link>
         <Link
-          href="/compras/nueva"
+          href="/bodegas"
           className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
-          Registrar compra
+          Bodegas
         </Link>
         <Link
           href="/propiedades/nueva"

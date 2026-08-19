@@ -35,6 +35,27 @@ export async function getLowStockCount(listingId: string) {
     .length;
 }
 
+export async function getLowStockCountsByListing(listingIds: string[]) {
+  const map = new Map<string, number>();
+  if (listingIds.length === 0) return map;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("listing_supply_stock")
+    .select("listing_id, current_quantity, min_quantity")
+    .in("listing_id", listingIds);
+
+  if (error) throw new Error(error.message);
+
+  (data ?? []).forEach((row) => {
+    if (row.current_quantity <= row.min_quantity) {
+      map.set(row.listing_id, (map.get(row.listing_id) ?? 0) + 1);
+    }
+  });
+
+  return map;
+}
+
 export async function getLowStockSummary() {
   const supabase = await createClient();
   const { data: stock, error } = await supabase

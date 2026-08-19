@@ -34,6 +34,9 @@ export interface Database {
           notes: string | null;
           cover_photo_url: string | null;
           active: boolean;
+          building_id: string | null;
+          floor: string | null;
+          warehouse_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -44,6 +47,9 @@ export interface Database {
           notes?: string | null;
           cover_photo_url?: string | null;
           active?: boolean;
+          building_id?: string | null;
+          floor?: string | null;
+          warehouse_id?: string | null;
         };
         Update: {
           name?: string;
@@ -51,8 +57,86 @@ export interface Database {
           notes?: string | null;
           cover_photo_url?: string | null;
           active?: boolean;
+          building_id?: string | null;
+          floor?: string | null;
+          warehouse_id?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
+      };
+      buildings: {
+        Row: { id: string; name: string; created_at: string };
+        Insert: { id?: string; name: string };
+        Update: { name?: string };
+        Relationships: [];
+      };
+      warehouses: {
+        Row: { id: string; name: string; created_at: string };
+        Insert: { id?: string; name: string };
+        Update: { name?: string };
+        Relationships: [];
+      };
+      warehouse_supply_stock: {
+        Row: {
+          id: string;
+          warehouse_id: string;
+          supply_type_id: string;
+          current_quantity: number;
+          min_quantity: number;
+          description: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          warehouse_id: string;
+          supply_type_id: string;
+          current_quantity?: number;
+          min_quantity?: number;
+          description?: string | null;
+        };
+        Update: {
+          current_quantity?: number;
+          min_quantity?: number;
+          description?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      transfers: {
+        Row: {
+          id: string;
+          warehouse_id: string;
+          listing_id: string;
+          transferred_at: string;
+          transferred_by: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          warehouse_id: string;
+          listing_id: string;
+          transferred_at?: string;
+          transferred_by?: string | null;
+          notes?: string | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      transfer_items: {
+        Row: {
+          id: string;
+          transfer_id: string;
+          supply_type_id: string;
+          quantity: number;
+        };
+        Insert: {
+          id?: string;
+          transfer_id: string;
+          supply_type_id: string;
+          quantity: number;
+        };
+        Update: Record<string, never>;
         Relationships: [];
       };
       inventory_categories: {
@@ -142,6 +226,7 @@ export interface Database {
           supply_type_id: string;
           current_quantity: number;
           min_quantity: number;
+          description: string | null;
           updated_at: string;
         };
         Insert: {
@@ -150,10 +235,12 @@ export interface Database {
           supply_type_id: string;
           current_quantity?: number;
           min_quantity?: number;
+          description?: string | null;
         };
         Update: {
           current_quantity?: number;
           min_quantity?: number;
+          description?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -232,7 +319,7 @@ export interface Database {
           id: string;
           purchase_id: string;
           supply_type_id: string;
-          listing_id: string | null;
+          warehouse_id: string | null;
           quantity: number;
           unit_cost: number | null;
         };
@@ -240,16 +327,54 @@ export interface Database {
           id?: string;
           purchase_id: string;
           supply_type_id: string;
-          listing_id?: string | null;
+          warehouse_id?: string | null;
           quantity: number;
           unit_cost?: number | null;
         };
         Update: Record<string, never>;
         Relationships: [];
       };
+      maintenance_types: {
+        Row: { id: string; name: string; created_at: string };
+        Insert: { id?: string; name: string };
+        Update: { name?: string };
+        Relationships: [];
+      };
+      maintenance_logs: {
+        Row: {
+          id: string;
+          listing_id: string;
+          maintenance_type_id: string;
+          performed_at: string;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          listing_id: string;
+          maintenance_type_id: string;
+          performed_at?: string;
+          notes?: string | null;
+          created_by?: string | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      allocate_supply_to_listing: {
+        Args: {
+          p_listing_id: string;
+          p_supply_type_id: string;
+          p_quantity: number;
+          p_min_quantity?: number | null;
+          p_description?: string | null;
+        };
+        Returns: undefined;
+      };
+    };
     Enums: {
       user_role: UserRole;
     };

@@ -4,11 +4,14 @@ import { getListing } from "@/lib/data/listings";
 import { getInventoryItems, getInventoryCategories } from "@/lib/data/inventory";
 import { getListingStock } from "@/lib/data/supplies";
 import { getCleaningsForListing } from "@/lib/data/cleanings";
+import { getWarehouse, getWarehouseStock } from "@/lib/data/warehouses";
+import { getMaintenanceOverview } from "@/lib/data/maintenance";
 import { getCurrentUser } from "@/lib/auth";
-import { setListingStock } from "@/lib/actions/supplies";
+import { allocateListingStock } from "@/lib/actions/supplies";
+import { logMaintenance } from "@/lib/actions/maintenance";
 import { ConditionBadge, StockBadge } from "@/components/badges";
 
-type Tab = "inventario" | "insumos" | "historial";
+type Tab = "inventario" | "insumos" | "historial" | "mantenimiento";
 
 export default async function PropiedadDetallePage({
   params,
@@ -20,7 +23,9 @@ export default async function PropiedadDetallePage({
   const { id } = await params;
   const { tab: tabParam, error } = await searchParams;
   const tab: Tab =
-    tabParam === "insumos" || tabParam === "historial" ? tabParam : "inventario";
+    tabParam === "insumos" || tabParam === "historial" || tabParam === "mantenimiento"
+      ? tabParam
+      : "inventario";
 
   const [listing, { profile }] = await Promise.all([
     getListing(id),
@@ -66,6 +71,7 @@ export default async function PropiedadDetallePage({
           [
             ["inventario", "Inventario"],
             ["insumos", "Insumos"],
+            ["mantenimiento", "Mantenimiento"],
             ["historial", "Historial de aseos"],
           ] as const
         ).map(([value, label]) => (
@@ -88,7 +94,14 @@ export default async function PropiedadDetallePage({
           <InventarioTab listingId={id} isAdmin={isAdmin} />
         )}
         {tab === "insumos" && (
-          <InsumosTab listingId={id} isAdmin={isAdmin} />
+          <InsumosTab
+            listingId={id}
+            warehouseId={listing.warehouse_id}
+            isAdmin={isAdmin}
+          />
+        )}
+        {tab === "mantenimiento" && (
+          <MantenimientoTab listingId={id} isAdmin={isAdmin} />
         )}
         {tab === "historial" && <HistorialTab listingId={id} />}
       </div>
@@ -157,66 +170,192 @@ async function InventarioTab({
 
 async function InsumosTab({
   listingId,
+  warehouseId,
+  isAdmin,
+}: {
+  listingId: string;
+  warehouseId: string | null;
+  isAdmin: boolean;
+}) {
+  const [stock, warehouse, warehouseStock] = await Promise.all([
+    getListingStock(listingId),
+    warehouseId ? getWarehouse(warehouseId) : Promise.resolve(null),
+    warehouseId ? getWarehouseStock(warehouseId) : Promise.resolve([]),
+  ]);
+
+  const warehouseAvailable = new Map(
+    warehouseStock.map((w) => [w.supply_type_id, w.current_quantity]),
+  );
+
+  return (
+    <div>
+      {!warehouseId && (
+        <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          Esta propiedad no tiene bodega asignada, así que los insumos se
+          editan libremente (sin descontar de ninguna bodega). Asígnale una
+          desde &quot;Editar&quot;.
+        </p>
+      )}
+      <ul className="divide-y divide-slate-200 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+        {stock.map((row) => {
+          const available = warehouseAvailable.get(row.supply_type_id) ?? 0;
+          const max = warehouseId ? row.current_quantity + available : undefined;
+
+          return (
+            <li key={row.supply_type_id} className="px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-900">
+                    {row.supply_name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {row.current_quantity} {row.unit} en este loft · mínimo{" "}
+                    {row.min_quantity}
+                    {warehouseId && (
+                      <> · {available} {row.unit} disponibles en {warehouse?.name}</>
+                    )}
+                  </p>
+                  {row.description && (
+                    <p className="mt-0.5 text-xs text-slate-400">{row.description}</p>
+                  )}
+                </div>
+                <StockBadge current={row.current_quantity} min={row.min_quantity} />
+              </div>
+
+              {isAdmin && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
+                    Ajustar
+                  </summary>
+                  <form
+                    action={allocateListingStock}
+                    className="mt-2 flex flex-wrap items-end gap-2"
+                  >
+                    <input type="hidden" name="listing_id" value={listingId} />
+                    <input
+                      type="hidden"
+                      name="supply_type_id"
+                      value={row.supply_type_id}
+                    />
+                    <div>
+                      <label className="block text-[11px] text-slate-500">
+                        Cantidad en este loft
+                        {warehouseId && ` (máx. ${max})`}
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        max={max}
+                        name="current_quantity"
+                        defaultValue={row.current_quantity}
+                        className="mt-0.5 w-24 rounded-md border border-slate-300 px-2 py-1 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-500">
+                        Mínimo
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        name="min_quantity"
+                        defaultValue={row.min_quantity}
+                        className="mt-0.5 w-24 rounded-md border border-slate-300 px-2 py-1 text-sm"
+                      />
+                    </div>
+                    <div className="w-full">
+                      <label className="block text-[11px] text-slate-500">
+                        Descripción (opcional)
+                      </label>
+                      <textarea
+                        name="description"
+                        rows={2}
+                        defaultValue={row.description ?? ""}
+                        placeholder="Ej. quedan 2 juegos blancos, 1 con una mancha leve"
+                        className="mt-0.5 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+                    >
+                      Guardar
+                    </button>
+                  </form>
+                </details>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+async function MantenimientoTab({
+  listingId,
   isAdmin,
 }: {
   listingId: string;
   isAdmin: boolean;
 }) {
-  const stock = await getListingStock(listingId);
+  const overview = await getMaintenanceOverview(listingId);
+  const logMaintenanceForListing = logMaintenance.bind(null, listingId);
 
   return (
     <ul className="divide-y divide-slate-200 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-      {stock.map((row) => (
-        <li key={row.supply_type_id} className="px-4 py-3">
+      {overview.map((item) => (
+        <li key={item.id} className="px-4 py-3">
           <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-slate-900">
-                {row.supply_name}
-              </p>
-              <p className="text-xs text-slate-500">
-                {row.current_quantity} {row.unit} en stock · mínimo {row.min_quantity}
-              </p>
-            </div>
-            <StockBadge current={row.current_quantity} min={row.min_quantity} />
+            <p className="text-sm font-medium text-slate-900">{item.name}</p>
+            <span className="text-xs text-slate-500">
+              {item.lastPerformedAt
+                ? `Última vez: ${new Date(item.lastPerformedAt).toLocaleDateString("es-CL", { dateStyle: "medium" })}`
+                : "Sin registros"}
+            </span>
           </div>
 
           {isAdmin && (
             <details className="mt-2">
               <summary className="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
-                Ajustar
+                Registrar / ver historial
               </summary>
+
+              {item.history.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {item.history.map((h) => (
+                    <li key={h.id} className="text-xs text-slate-500">
+                      {new Date(h.performed_at).toLocaleDateString("es-CL", {
+                        dateStyle: "medium",
+                      })}
+                      {h.notes ? ` — ${h.notes}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
               <form
-                action={setListingStock}
+                action={logMaintenanceForListing}
                 className="mt-2 flex flex-wrap items-end gap-2"
               >
-                <input type="hidden" name="listing_id" value={listingId} />
-                <input
-                  type="hidden"
-                  name="supply_type_id"
-                  value={row.supply_type_id}
-                />
+                <input type="hidden" name="maintenance_type_id" value={item.id} />
                 <div>
-                  <label className="block text-[11px] text-slate-500">
-                    Cantidad actual
-                  </label>
+                  <label className="block text-[11px] text-slate-500">Fecha</label>
                   <input
-                    type="number"
-                    step="0.01"
-                    name="current_quantity"
-                    defaultValue={row.current_quantity}
-                    className="mt-0.5 w-24 rounded-md border border-slate-300 px-2 py-1 text-sm"
+                    type="date"
+                    name="performed_at"
+                    defaultValue={new Date().toISOString().slice(0, 10)}
+                    className="mt-0.5 rounded-md border border-slate-300 px-2 py-1 text-sm"
                   />
                 </div>
-                <div>
+                <div className="w-full">
                   <label className="block text-[11px] text-slate-500">
-                    Mínimo
+                    Descripción (opcional)
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    name="min_quantity"
-                    defaultValue={row.min_quantity}
-                    className="mt-0.5 w-24 rounded-md border border-slate-300 px-2 py-1 text-sm"
+                    name="notes"
+                    className="mt-0.5 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
                   />
                 </div>
                 <button
