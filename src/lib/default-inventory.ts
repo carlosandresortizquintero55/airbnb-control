@@ -6,14 +6,12 @@ export const DEFAULT_INVENTORY_TEMPLATE: Array<{
   name: string;
 }> = [
   // Dormitorio
+  // Nota: sábanas, sobrecama y toallas NO van aquí — viven en Insumos/Bodega
+  // (se reponen desde una bodega y ahí sí tienen tope validado).
   { category: "Dormitorio", name: "Cama King (190)" },
   { category: "Dormitorio", name: "Cama Queen (160)" },
   { category: "Dormitorio", name: "Cama Doble (140)" },
   { category: "Dormitorio", name: "Cama Sencilla/Twin (120)" },
-  { category: "Dormitorio", name: "Juego de sábana" },
-  { category: "Dormitorio", name: "Sobrecama" },
-  { category: "Dormitorio", name: "Toallas grandes" },
-  { category: "Dormitorio", name: "Toallas pequeñas" },
 
   // Sala
   { category: "Sala", name: "Sofá" },
