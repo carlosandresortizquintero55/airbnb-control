@@ -57,9 +57,9 @@ export async function allocateListingStock(formData: FormData) {
 
   const listingId = String(formData.get("listing_id") ?? "");
   const supplyTypeId = String(formData.get("supply_type_id") ?? "");
-  const quantity = Number(formData.get("current_quantity") ?? 0);
+  const quantity = Math.round(Number(formData.get("current_quantity") ?? 0));
   const minRaw = formData.get("min_quantity");
-  const minQuantity = minRaw !== null && minRaw !== "" ? Number(minRaw) : null;
+  const minQuantity = minRaw !== null && minRaw !== "" ? Math.round(Number(minRaw)) : null;
   const description = String(formData.get("description") ?? "").trim();
 
   const { error } = await supabase.rpc("allocate_supply_to_listing", {

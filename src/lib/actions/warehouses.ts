@@ -32,7 +32,7 @@ export async function adjustWarehouseStock(formData: FormData) {
   const warehouseId = String(formData.get("warehouse_id") ?? "");
   const supplyTypeId = String(formData.get("supply_type_id") ?? "");
   const direction = String(formData.get("direction") ?? "add");
-  const amount = Math.abs(Number(formData.get("amount") ?? 0));
+  const amount = Math.abs(Math.round(Number(formData.get("amount") ?? 0)));
 
   if (!amount) {
     redirect(`/bodegas/${warehouseId}?error=${encodeURIComponent("Ingresa una cantidad mayor a 0.")}`);
@@ -86,8 +86,9 @@ export async function setWarehouseStock(formData: FormData) {
     description: description || null,
   };
 
-  if (minRaw !== null && minRaw !== "") row.min_quantity = Number(minRaw);
-  if (currentRaw !== null && currentRaw !== "") row.current_quantity = Number(currentRaw);
+  if (minRaw !== null && minRaw !== "") row.min_quantity = Math.round(Number(minRaw));
+  if (currentRaw !== null && currentRaw !== "")
+    row.current_quantity = Math.round(Number(currentRaw));
 
   const { error } = await supabase
     .from("warehouse_supply_stock")

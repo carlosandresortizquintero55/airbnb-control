@@ -2,13 +2,28 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function getListings() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("listings")
-    .select("*")
-    .order("name", { ascending: true });
+  const [{ data, error }, { data: buildings }] = await Promise.all([
+    supabase.from("listings").select("*"),
+    supabase.from("buildings").select("id, position"),
+  ]);
 
   if (error) throw new Error(error.message);
-  return data;
+
+  const buildingPosition = new Map(
+    (buildings ?? []).map((b) => [b.id, b.position]),
+  );
+
+  return (data ?? []).sort((a, b) => {
+    const posA = a.building_id ? buildingPosition.get(a.building_id) ?? 999 : 999;
+    const posB = b.building_id ? buildingPosition.get(b.building_id) ?? 999 : 999;
+    if (posA !== posB) return posA - posB;
+
+    const floorA = a.floor ?? "";
+    const floorB = b.floor ?? "";
+    if (floorA !== floorB) return floorA.localeCompare(floorB);
+
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export async function getListing(id: string) {

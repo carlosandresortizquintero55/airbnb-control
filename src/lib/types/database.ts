@@ -65,15 +65,15 @@ export interface Database {
         Relationships: [];
       };
       buildings: {
-        Row: { id: string; name: string; created_at: string };
-        Insert: { id?: string; name: string };
-        Update: { name?: string };
+        Row: { id: string; name: string; position: number; created_at: string };
+        Insert: { id?: string; name: string; position?: number };
+        Update: { name?: string; position?: number };
         Relationships: [];
       };
       warehouses: {
-        Row: { id: string; name: string; created_at: string };
-        Insert: { id?: string; name: string };
-        Update: { name?: string };
+        Row: { id: string; name: string; position: number; created_at: string };
+        Insert: { id?: string; name: string; position?: number };
+        Update: { name?: string; position?: number };
         Relationships: [];
       };
       warehouse_supply_stock: {

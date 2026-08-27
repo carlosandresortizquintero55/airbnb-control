@@ -3,7 +3,11 @@ import { getSupplyTypes } from "@/lib/data/supplies";
 
 export async function getWarehouses() {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("warehouses").select("*").order("name");
+  const { data, error } = await supabase
+    .from("warehouses")
+    .select("*")
+    .order("position")
+    .order("name");
 
   if (error) throw new Error(error.message);
   return data ?? [];

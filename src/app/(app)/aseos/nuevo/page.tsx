@@ -88,7 +88,7 @@ export default async function NuevoAseoPage({
                         id={`supply_${s.id}`}
                         name={`supply_${s.id}`}
                         type="number"
-                        step="0.01"
+                        step="1"
                         min={0}
                         defaultValue={0}
                         className="w-20 rounded-md border border-slate-300 px-2 py-1 text-right text-sm"

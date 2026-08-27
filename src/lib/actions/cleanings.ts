@@ -39,7 +39,7 @@ export async function createCleaning(formData: FormData) {
   for (const [key, value] of formData.entries()) {
     if (!key.startsWith("supply_")) continue;
     const supplyTypeId = key.slice("supply_".length);
-    const qty = Number(value);
+    const qty = Math.round(Number(value));
     if (qty > 0) {
       usageRows.push({
         cleaning_id: cleaning.id,

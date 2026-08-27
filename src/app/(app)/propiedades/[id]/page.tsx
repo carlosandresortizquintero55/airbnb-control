@@ -244,7 +244,7 @@ async function InsumosTab({
                       </label>
                       <input
                         type="number"
-                        step="0.01"
+                        step="1"
                         min={0}
                         max={max}
                         name="current_quantity"
@@ -258,7 +258,7 @@ async function InsumosTab({
                       </label>
                       <input
                         type="number"
-                        step="0.01"
+                        step="1"
                         name="min_quantity"
                         defaultValue={row.min_quantity}
                         className="mt-0.5 w-24 rounded-md border border-slate-300 px-2 py-1 text-sm"
