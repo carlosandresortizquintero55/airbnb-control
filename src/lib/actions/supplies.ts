@@ -57,24 +57,18 @@ export async function allocateListingStock(formData: FormData) {
 
   const listingId = String(formData.get("listing_id") ?? "");
   const supplyTypeId = String(formData.get("supply_type_id") ?? "");
+  const quantity = Number(formData.get("current_quantity") ?? 0);
   const minRaw = formData.get("min_quantity");
-  const currentRaw = formData.get("current_quantity");
+  const minQuantity = minRaw !== null && minRaw !== "" ? Number(minRaw) : null;
   const description = String(formData.get("description") ?? "").trim();
 
-  const row: {
-    listing_id: string;
-    supply_type_id: string;
-    min_quantity?: number;
-    current_quantity?: number;
-    description: string | null;
-  } = { listing_id: listingId, supply_type_id: supplyTypeId, description: description || null };
-
-  if (minRaw !== null && minRaw !== "") row.min_quantity = Number(minRaw);
-  if (currentRaw !== null && currentRaw !== "") row.current_quantity = Number(currentRaw);
-
-  const { error } = await supabase
-    .from("listing_supply_stock")
-    .upsert(row, { onConflict: "listing_id,supply_type_id" });
+  const { error } = await supabase.rpc("allocate_supply_to_listing", {
+    p_listing_id: listingId,
+    p_supply_type_id: supplyTypeId,
+    p_quantity: quantity,
+    p_min_quantity: minQuantity,
+    p_description: description || null,
+  });
 
   if (error) {
     redirect(
@@ -83,6 +77,7 @@ export async function allocateListingStock(formData: FormData) {
   }
 
   revalidatePath(`/propiedades/${listingId}`);
+  revalidatePath("/bodegas");
   revalidatePath("/inventario");
   redirect(`/propiedades/${listingId}?tab=insumos`);
 }
