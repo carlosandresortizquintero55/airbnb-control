@@ -6,12 +6,14 @@ import { getListingStock } from "@/lib/data/supplies";
 import { getCleaningsForListing } from "@/lib/data/cleanings";
 import { getWarehouse, getWarehouseStock } from "@/lib/data/warehouses";
 import { getMaintenanceOverview } from "@/lib/data/maintenance";
+import { getListingMedia } from "@/lib/data/listing-media";
 import { getCurrentUser } from "@/lib/auth";
 import { allocateListingStock } from "@/lib/actions/supplies";
 import { logMaintenance } from "@/lib/actions/maintenance";
+import { addListingMedia, deleteListingMedia } from "@/lib/actions/listing-media";
 import { ConditionBadge, StockBadge } from "@/components/badges";
 
-type Tab = "inventario" | "insumos" | "historial" | "mantenimiento";
+type Tab = "inventario" | "insumos" | "historial" | "mantenimiento" | "fotos";
 
 export default async function PropiedadDetallePage({
   params,
@@ -23,7 +25,10 @@ export default async function PropiedadDetallePage({
   const { id } = await params;
   const { tab: tabParam, error } = await searchParams;
   const tab: Tab =
-    tabParam === "insumos" || tabParam === "historial" || tabParam === "mantenimiento"
+    tabParam === "insumos" ||
+    tabParam === "historial" ||
+    tabParam === "mantenimiento" ||
+    tabParam === "fotos"
       ? tabParam
       : "inventario";
 
@@ -72,6 +77,7 @@ export default async function PropiedadDetallePage({
             ["inventario", "Inventario"],
             ["insumos", "Insumos"],
             ["mantenimiento", "Mantenimiento"],
+            ["fotos", "Fotos"],
             ["historial", "Historial de aseos"],
           ] as const
         ).map(([value, label]) => (
@@ -103,6 +109,7 @@ export default async function PropiedadDetallePage({
         {tab === "mantenimiento" && (
           <MantenimientoTab listingId={id} isAdmin={isAdmin} />
         )}
+        {tab === "fotos" && <FotosTab listingId={id} isAdmin={isAdmin} />}
         {tab === "historial" && <HistorialTab listingId={id} />}
       </div>
     </div>
@@ -370,6 +377,105 @@ async function MantenimientoTab({
         </li>
       ))}
     </ul>
+  );
+}
+
+async function FotosTab({
+  listingId,
+  isAdmin,
+}: {
+  listingId: string;
+  isAdmin: boolean;
+}) {
+  const media = await getListingMedia(listingId);
+  const addMediaForListing = addListingMedia.bind(null, listingId);
+
+  return (
+    <div>
+      {isAdmin && (
+        <form
+          action={addMediaForListing}
+          encType="multipart/form-data"
+          className="space-y-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+        >
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Fotos / video
+            </label>
+            <input
+              type="file"
+              name="media"
+              accept="image/*,video/*"
+              multiple
+              className="mt-1 w-full text-sm text-slate-600"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Descripción (opcional)
+            </label>
+            <input
+              name="caption"
+              placeholder="Ej. Sala, antes del último huésped"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Subir
+          </button>
+        </form>
+      )}
+
+      {media.length === 0 ? (
+        <p className="mt-4 text-sm text-slate-500">
+          Todavía no hay fotos ni video de referencia para esta propiedad.
+        </p>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {media.map((m) => (
+            <div key={m.id} className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+              <a
+                href={m.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block aspect-square bg-slate-100"
+              >
+                {m.media_type === "video" ? (
+                  <video src={m.url} className="h-full w-full object-cover" />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={m.url}
+                    alt={m.caption ?? "Foto de referencia"}
+                    className="h-full w-full object-cover"
+                  />
+                )}
+              </a>
+              {(m.caption || isAdmin) && (
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+                  <p className="truncate text-xs text-slate-500">{m.caption}</p>
+                  {isAdmin && (
+                    <form action={deleteListingMedia}>
+                      <input type="hidden" name="media_id" value={m.id} />
+                      <input type="hidden" name="listing_id" value={listingId} />
+                      <button
+                        type="submit"
+                        className="shrink-0 text-xs font-medium text-red-600 hover:text-red-700"
+                      >
+                        Borrar
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

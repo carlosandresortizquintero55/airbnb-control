@@ -198,6 +198,27 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      listing_media: {
+        Row: {
+          id: string;
+          listing_id: string;
+          url: string;
+          media_type: MediaType;
+          caption: string | null;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          listing_id: string;
+          url: string;
+          media_type: MediaType;
+          caption?: string | null;
+          created_by?: string | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       supply_types: {
         Row: {
           id: string;
