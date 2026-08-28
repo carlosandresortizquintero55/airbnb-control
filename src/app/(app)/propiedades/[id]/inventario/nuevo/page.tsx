@@ -116,6 +116,17 @@ export default async function NuevoItemPage({
             className="mt-1 w-full text-sm text-slate-600"
           />
         </div>
+        <label className="flex items-start gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            name="apply_to_all"
+            className="mt-0.5 h-4 w-4 rounded border-slate-300"
+          />
+          <span>
+            Agregar también a todas las demás propiedades (con cantidad 0,
+            para que cada una ajuste la suya)
+          </span>
+        </label>
         <button
           type="submit"
           className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white hover:bg-slate-800"

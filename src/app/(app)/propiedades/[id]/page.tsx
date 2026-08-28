@@ -5,17 +5,15 @@ import { getInventoryItems, getInventoryCategories } from "@/lib/data/inventory"
 import { getListingStock } from "@/lib/data/supplies";
 import { getCleaningsForListing } from "@/lib/data/cleanings";
 import { getWarehouse, getWarehouseStock } from "@/lib/data/warehouses";
-import { getMaintenanceOverview } from "@/lib/data/maintenance";
 import { getListingMedia } from "@/lib/data/listing-media";
 import { getCurrentUser } from "@/lib/auth";
 import { allocateListingStock } from "@/lib/actions/supplies";
-import { logMaintenance } from "@/lib/actions/maintenance";
 import { addListingMedia, deleteListingMedia } from "@/lib/actions/listing-media";
 import { deleteListing } from "@/lib/actions/listings";
 import { ConditionBadge, StockBadge } from "@/components/badges";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
-type Tab = "inventario" | "insumos" | "historial" | "mantenimiento" | "fotos";
+type Tab = "inventario" | "insumos" | "historial" | "fotos";
 
 export default async function PropiedadDetallePage({
   params,
@@ -27,10 +25,7 @@ export default async function PropiedadDetallePage({
   const { id } = await params;
   const { tab: tabParam, error } = await searchParams;
   const tab: Tab =
-    tabParam === "insumos" ||
-    tabParam === "historial" ||
-    tabParam === "mantenimiento" ||
-    tabParam === "fotos"
+    tabParam === "insumos" || tabParam === "historial" || tabParam === "fotos"
       ? tabParam
       : "inventario";
 
@@ -89,7 +84,6 @@ export default async function PropiedadDetallePage({
           [
             ["inventario", "Inventario"],
             ["insumos", "Insumos"],
-            ["mantenimiento", "Mantenimiento"],
             ["fotos", "Fotos"],
             ["historial", "Historial de aseos"],
           ] as const
@@ -118,9 +112,6 @@ export default async function PropiedadDetallePage({
             warehouseId={listing.warehouse_id}
             isAdmin={isAdmin}
           />
-        )}
-        {tab === "mantenimiento" && (
-          <MantenimientoTab listingId={id} isAdmin={isAdmin} />
         )}
         {tab === "fotos" && <FotosTab listingId={id} isAdmin={isAdmin} />}
         {tab === "historial" && <HistorialTab listingId={id} />}
@@ -158,35 +149,47 @@ async function InventarioTab({
           Sin items registrados todavía.
         </p>
       ) : (
-        <ul className="mt-4 divide-y divide-slate-200 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-          {items.map((item) => (
-            <li key={item.id}>
-              <Link
-                href={`/propiedades/${listingId}/inventario/${item.id}`}
-                className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-900">
-                    {item.name}{" "}
-                    <span className="font-normal text-slate-400">
-                      × {item.quantity}
-                    </span>
-                  </p>
-                  <p className="truncate text-xs text-slate-500">
-                    {item.category_id
-                      ? categoryMap.get(item.category_id) ?? "Sin categoría"
-                      : "Sin categoría"}
-                  </p>
-                </div>
-                {item.quantity > 0 ? (
-                  <ConditionBadge condition={item.condition} />
-                ) : (
-                  <span className="text-xs text-slate-400">Sin unidades</span>
-                )}
-              </Link>
-            </li>
+        <div className="mt-4 space-y-6">
+          {Object.entries(
+            items.reduce<Record<string, typeof items>>((acc, item) => {
+              const categoryName = item.category_id
+                ? categoryMap.get(item.category_id) ?? "Sin categoría"
+                : "Sin categoría";
+              (acc[categoryName] ??= []).push(item);
+              return acc;
+            }, {}),
+          ).map(([categoryName, categoryItems]) => (
+            <div key={categoryName}>
+              <h2 className="text-sm font-semibold text-slate-700">
+                {categoryName}
+              </h2>
+              <ul className="mt-2 divide-y divide-slate-200 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                {categoryItems.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={`/propiedades/${listingId}/inventario/${item.id}`}
+                      className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50"
+                    >
+                      <p className="truncate text-sm font-medium text-slate-900">
+                        {item.name}{" "}
+                        <span className="font-normal text-slate-400">
+                          × {item.quantity}
+                        </span>
+                      </p>
+                      {item.quantity > 0 ? (
+                        <ConditionBadge condition={item.condition} />
+                      ) : (
+                        <span className="shrink-0 text-xs text-slate-400">
+                          Sin unidades
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
@@ -314,86 +317,6 @@ async function InsumosTab({
         })}
       </ul>
     </div>
-  );
-}
-
-async function MantenimientoTab({
-  listingId,
-  isAdmin,
-}: {
-  listingId: string;
-  isAdmin: boolean;
-}) {
-  const overview = await getMaintenanceOverview(listingId);
-  const logMaintenanceForListing = logMaintenance.bind(null, listingId);
-
-  return (
-    <ul className="divide-y divide-slate-200 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-      {overview.map((item) => (
-        <li key={item.id} className="px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-slate-900">{item.name}</p>
-            <span className="text-xs text-slate-500">
-              {item.lastPerformedAt
-                ? `Última vez: ${new Date(item.lastPerformedAt).toLocaleDateString("es-CL", { dateStyle: "medium" })}`
-                : "Sin registros"}
-            </span>
-          </div>
-
-          {isAdmin && (
-            <details className="mt-2">
-              <summary className="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
-                Registrar / ver historial
-              </summary>
-
-              {item.history.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {item.history.map((h) => (
-                    <li key={h.id} className="text-xs text-slate-500">
-                      {new Date(h.performed_at).toLocaleDateString("es-CL", {
-                        dateStyle: "medium",
-                      })}
-                      {h.notes ? ` — ${h.notes}` : ""}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <form
-                action={logMaintenanceForListing}
-                className="mt-2 flex flex-wrap items-end gap-2"
-              >
-                <input type="hidden" name="maintenance_type_id" value={item.id} />
-                <div>
-                  <label className="block text-[11px] text-slate-500">Fecha</label>
-                  <input
-                    type="date"
-                    name="performed_at"
-                    defaultValue={new Date().toISOString().slice(0, 10)}
-                    className="mt-0.5 rounded-md border border-slate-300 px-2 py-1 text-sm"
-                  />
-                </div>
-                <div className="w-full">
-                  <label className="block text-[11px] text-slate-500">
-                    Descripción (opcional)
-                  </label>
-                  <input
-                    name="notes"
-                    className="mt-0.5 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
-                >
-                  Guardar
-                </button>
-              </form>
-            </details>
-          )}
-        </li>
-      ))}
-    </ul>
   );
 }
 

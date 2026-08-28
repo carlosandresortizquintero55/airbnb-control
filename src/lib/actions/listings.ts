@@ -62,7 +62,7 @@ async function applyDefaultInventoryTemplate(
       listing_id: listingId,
       category_id: categoryMap.get(item.category) ?? null,
       name: item.name,
-      quantity: 0,
+      quantity: item.quantity,
       condition: "bueno" as const,
     })),
   );

@@ -1,71 +1,55 @@
 // Plantilla de inventario que parte igual en todas las propiedades.
-// Cantidad por defecto en 0: el admin solo tiene que ajustar lo que aplica
-// (ej. dejar en 0 los tamaños de cama que no existen en esa propiedad).
 export const DEFAULT_INVENTORY_TEMPLATE: Array<{
   category: string;
   name: string;
+  quantity: number;
 }> = [
-  // Dormitorio
-  // Nota: sábanas, sobrecama y toallas NO van aquí — viven en Insumos/Bodega
-  // (se reponen desde una bodega y ahí sí tienen tope validado).
-  { category: "Dormitorio", name: "Cama King (190)" },
-  { category: "Dormitorio", name: "Cama Queen (160)" },
-  { category: "Dormitorio", name: "Cama Doble (140)" },
-  { category: "Dormitorio", name: "Cama Sencilla/Twin (120)" },
+  // Cocina
+  { category: "Cocina", name: "Licuadora", quantity: 1 },
+  { category: "Cocina", name: "Airfryer", quantity: 1 },
+  { category: "Cocina", name: "Cafetera", quantity: 1 },
+  { category: "Cocina", name: "Microondas", quantity: 1 },
+  { category: "Cocina", name: "Horno tostador", quantity: 1 },
+  { category: "Cocina", name: "Sandwichera", quantity: 0 },
+  { category: "Cocina", name: "Vasos vidrio", quantity: 4 },
+  { category: "Cocina", name: "Copas de vino", quantity: 2 },
+  { category: "Cocina", name: "Pocillos", quantity: 4 },
+  { category: "Cocina", name: "Platos medianos", quantity: 4 },
+  { category: "Cocina", name: "Platos grandes", quantity: 4 },
+  { category: "Cocina", name: "Platos hondos", quantity: 4 },
+  { category: "Cocina", name: "Cocas plásticas", quantity: 4 },
+  { category: "Cocina", name: "Cucharas grandes", quantity: 4 },
+  { category: "Cocina", name: "Cucharas pequeñas", quantity: 4 },
+  { category: "Cocina", name: "Tenedor", quantity: 4 },
+  { category: "Cocina", name: "Cuchillos", quantity: 4 },
+  { category: "Cocina", name: "Cuchillos grandes", quantity: 1 },
+  { category: "Cocina", name: "Abrelatas", quantity: 1 },
+  { category: "Cocina", name: "Sacacorchos", quantity: 1 },
+  { category: "Cocina", name: "Afilador", quantity: 1 },
+  { category: "Cocina", name: "Rallador", quantity: 1 },
+  { category: "Cocina", name: "Tabla de picar", quantity: 1 },
+  { category: "Cocina", name: "Exprimidor", quantity: 1 },
+  { category: "Cocina", name: "Tijeras", quantity: 1 },
+  { category: "Cocina", name: "Cucharones (utensilio)", quantity: 4 },
+  { category: "Cocina", name: "Trapos cocina", quantity: 1 },
+  { category: "Cocina", name: "Nevera", quantity: 1 },
 
-  // Sala
-  { category: "Sala", name: "Sofá" },
-
-  // Cocina y menaje
-  { category: "Cocina y menaje", name: "Abrelatas" },
-  { category: "Cocina y menaje", name: "Tabla para picar" },
-  { category: "Cocina y menaje", name: "Destapacorchos" },
-  { category: "Cocina y menaje", name: "Rallador" },
-  { category: "Cocina y menaje", name: "Cuchillos de cocina" },
-  { category: "Cocina y menaje", name: "Cucharas" },
-  { category: "Cocina y menaje", name: "Tenedores" },
-  { category: "Cocina y menaje", name: "Cuchillos (cubiertos)" },
-  { category: "Cocina y menaje", name: "Utensilios de cocina (varios)" },
-  { category: "Cocina y menaje", name: "Horno tostador" },
-  { category: "Cocina y menaje", name: "Microondas" },
-  { category: "Cocina y menaje", name: "Ollas" },
-  { category: "Cocina y menaje", name: "Cafetera" },
-  { category: "Cocina y menaje", name: "Sandwichera" },
-  { category: "Cocina y menaje", name: "Exprimidor de jugos" },
-  { category: "Cocina y menaje", name: "Airfryer" },
-  { category: "Cocina y menaje", name: "Copas de vino" },
-
-  // Baño
-  { category: "Baño", name: "Secador de pelo" },
-
-  // Lavandería
-  { category: "Lavandería", name: "Plancha" },
-  { category: "Lavandería", name: "Mesa de planchar" },
-  { category: "Lavandería", name: "Armario para secar ropa" },
-  { category: "Lavandería", name: "Detergente líquido (se deja)" },
-  { category: "Lavandería", name: "Aromatizante (se deja)" },
-
-  // Electrónica / Seguridad
-  { category: "Electrónica", name: "Chapa electrónica de puerta" },
-  { category: "Electrónica", name: "Control de aire acondicionado" },
-  { category: "Electrónica", name: "Control de TV" },
-  { category: "Electrónica", name: "Control de ventilador" },
-  { category: "Electrónica", name: "Control de cortinas" },
-
-  // Climatización
-  { category: "Climatización", name: "Aire acondicionado" },
-  { category: "Climatización", name: "Jacuzzi" },
-  { category: "Climatización", name: "Calentador de agua a gas" },
-];
-
-export const DEFAULT_MAINTENANCE_TYPES: string[] = [
-  "Fumigación",
-  "Pilas – Chapa electrónica",
-  "Pilas – Control aire acondicionado",
-  "Pilas – Control TV",
-  "Pilas – Control ventilador",
-  "Pilas – Control cortinas",
-  "Mantenimiento aire acondicionado",
-  "Mantenimiento jacuzzi",
-  "Mantenimiento calentador de agua a gas",
+  // General
+  { category: "General", name: "Ventilador", quantity: 1 },
+  { category: "General", name: "Cama", quantity: 1 },
+  { category: "General", name: "TV", quantity: 1 },
+  { category: "General", name: "Sofá", quantity: 1 },
+  { category: "General", name: "Sillas barra", quantity: 2 },
+  { category: "General", name: "Tapete de baño", quantity: 1 },
+  { category: "General", name: "Jabonera baño", quantity: 1 },
+  { category: "General", name: "Secador de pelo", quantity: 1 },
+  { category: "General", name: "Plancha", quantity: 1 },
+  { category: "General", name: "Tendedero de ropa", quantity: 1 },
+  { category: "General", name: "Mesa de planchar", quantity: 1 },
+  { category: "General", name: "Aire acondicionado", quantity: 1 },
+  { category: "General", name: "Chapa digital", quantity: 1 },
+  { category: "General", name: "Control aire acondicionado", quantity: 1 },
+  { category: "General", name: "Control TV", quantity: 1 },
+  { category: "General", name: "Toallas grandes", quantity: 4 },
+  { category: "General", name: "Toallas pequeñas", quantity: 2 },
 ];

@@ -17,6 +17,7 @@ export async function createInventoryItem(listingId: string, formData: FormData)
   const condition = (String(formData.get("condition") ?? "bueno") as ItemCondition);
   const notes = String(formData.get("notes") ?? "").trim();
   const media = formData.getAll("media") as File[];
+  const applyToAll = formData.get("apply_to_all") === "on";
 
   if (!name) {
     redirect(
@@ -56,7 +57,31 @@ export async function createInventoryItem(listingId: string, formData: FormData)
     );
   }
 
+  if (applyToAll) {
+    const [{ data: otherListings }, { data: existing }] = await Promise.all([
+      supabase.from("listings").select("id").neq("id", listingId),
+      supabase.from("inventory_items").select("listing_id").eq("name", name),
+    ]);
+
+    const alreadyHasIt = new Set((existing ?? []).map((r) => r.listing_id));
+    const targets = (otherListings ?? []).filter((l) => !alreadyHasIt.has(l.id));
+
+    if (targets.length > 0) {
+      await supabase.from("inventory_items").insert(
+        targets.map((l) => ({
+          listing_id: l.id,
+          category_id: categoryId,
+          name,
+          quantity: 0,
+          condition: "bueno" as const,
+          updated_by: user.id,
+        })),
+      );
+    }
+  }
+
   revalidatePath(`/propiedades/${listingId}`);
+  revalidatePath("/propiedades");
   redirect(`/propiedades/${listingId}?tab=inventario`);
 }
 
