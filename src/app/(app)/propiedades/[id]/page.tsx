@@ -178,7 +178,11 @@ async function InventarioTab({
                       : "Sin categoría"}
                   </p>
                 </div>
-                <ConditionBadge condition={item.condition} />
+                {item.quantity > 0 ? (
+                  <ConditionBadge condition={item.condition} />
+                ) : (
+                  <span className="text-xs text-slate-400">Sin unidades</span>
+                )}
               </Link>
             </li>
           ))}

@@ -110,7 +110,7 @@ export default async function ItemDetallePage({
               <input
                 type="number"
                 name="quantity"
-                min={1}
+                min={0}
                 defaultValue={item.quantity}
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
               />
@@ -163,7 +163,7 @@ export default async function ItemDetallePage({
       ) : (
         <div className="mt-4 space-y-1 text-sm text-slate-600">
           <p>Cantidad: {item.quantity}</p>
-          <p>Condición: {item.condition}</p>
+          {item.quantity > 0 && <p>Condición: {item.condition}</p>}
           {item.notes && <p>Notas: {item.notes}</p>}
         </div>
       )}
