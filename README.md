@@ -1,17 +1,20 @@
 # Control Airbnb
 
-App para gestionar inventario, insumos de aseo y registro de aseos de tus
-propiedades Airbnb.
+App de control de inventario para tus propiedades Airbnb: qué hay en cada
+loft y qué hay en cada bodega.
 
-- **Inventario por propiedad**: items, condición (bueno/regular/malo), fotos
-  y video como evidencia.
-- **Insumos de aseo**: stock por propiedad con umbral mínimo y alertas.
-- **Registro manual de aseos**: el personal marca qué insumos usó y sube
-  fotos/video, ya que no hay integración con la plataforma de Airbnb.
-- **Compras**: al registrar una compra asignada a una propiedad, su stock
-  sube automáticamente. Al registrar un aseo, el stock baja automáticamente.
-- Roles: **administrador** (control total) y **personal de aseo** (solo
-  registra aseos y consulta propiedades).
+- **Inventario por propiedad**: items fijos (camas, cocina, electrónica,
+  etc.) con condición (bueno/regular/malo) y fotos. Cualquier usuario puede
+  agregar observaciones a un item; solo el administrador puede borrarlas.
+- **Insumos**: cada loft y cada bodega llevan su propio stock de forma
+  independiente. Asignarle cantidad de un insumo a un loft descuenta de su
+  bodega asignada (con error si no alcanza).
+- **Bodegas**: agregar/quitar stock, crear insumos nuevos, ver en qué loft
+  está cada uno.
+- **Inventario general**: mapa por edificio/piso con alertas de stock bajo,
+  más un resumen de solo lectura con el total de cada insumo.
+- Roles: **administrador** (control total: agrega/edita/borra) y
+  **personal** (solo agrega observaciones, no puede borrar nada).
 
 ## Primeros pasos
 
