@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getListing } from "@/lib/data/listings";
 import { getInventoryItems, getInventoryCategories } from "@/lib/data/inventory";
 import { getListingStock } from "@/lib/data/supplies";
-import { getCleaningsForListing } from "@/lib/data/cleanings";
 import { getWarehouse, getWarehouseStock } from "@/lib/data/warehouses";
 import { getListingMedia } from "@/lib/data/listing-media";
 import { getCurrentUser } from "@/lib/auth";
@@ -13,7 +12,7 @@ import { deleteListing } from "@/lib/actions/listings";
 import { ConditionBadge, StockBadge } from "@/components/badges";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
-type Tab = "inventario" | "insumos" | "historial" | "fotos";
+type Tab = "inventario" | "insumos" | "fotos";
 
 export default async function PropiedadDetallePage({
   params,
@@ -25,9 +24,7 @@ export default async function PropiedadDetallePage({
   const { id } = await params;
   const { tab: tabParam, error } = await searchParams;
   const tab: Tab =
-    tabParam === "insumos" || tabParam === "historial" || tabParam === "fotos"
-      ? tabParam
-      : "inventario";
+    tabParam === "insumos" || tabParam === "fotos" ? tabParam : "inventario";
 
   const [listing, { profile }] = await Promise.all([
     getListing(id),
@@ -57,7 +54,7 @@ export default async function PropiedadDetallePage({
             <form action={deleteListing}>
               <input type="hidden" name="listing_id" value={id} />
               <ConfirmSubmitButton
-                confirmMessage={`¿Seguro que quieres borrar "${listing.name}"? Se pierde todo su inventario, insumos, fotos e historial de aseos. Esta acción no se puede deshacer.`}
+                confirmMessage={`¿Seguro que quieres borrar "${listing.name}"? Se pierde todo su inventario, insumos y fotos. Esta acción no se puede deshacer.`}
                 className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
               >
                 Borrar
@@ -85,7 +82,6 @@ export default async function PropiedadDetallePage({
             ["inventario", "Inventario"],
             ["insumos", "Insumos"],
             ["fotos", "Fotos"],
-            ["historial", "Historial de aseos"],
           ] as const
         ).map(([value, label]) => (
           <Link
@@ -114,7 +110,6 @@ export default async function PropiedadDetallePage({
           />
         )}
         {tab === "fotos" && <FotosTab listingId={id} isAdmin={isAdmin} />}
-        {tab === "historial" && <HistorialTab listingId={id} />}
       </div>
     </div>
   );
@@ -416,41 +411,5 @@ async function FotosTab({
         </div>
       )}
     </div>
-  );
-}
-
-async function HistorialTab({ listingId }: { listingId: string }) {
-  const cleanings = await getCleaningsForListing(listingId);
-
-  if (cleanings.length === 0) {
-    return (
-      <p className="text-sm text-slate-500">
-        Todavía no hay aseos registrados para esta propiedad.
-      </p>
-    );
-  }
-
-  return (
-    <ul className="divide-y divide-slate-200 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-      {cleanings.map((c) => (
-        <li key={c.id}>
-          <Link
-            href={`/aseos/${c.id}`}
-            className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50"
-          >
-            <div>
-              <p className="text-sm font-medium text-slate-900">
-                {new Date(c.cleaned_at).toLocaleString("es-CL", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
-              </p>
-              <p className="text-xs text-slate-500">Aseo por {c.staffName}</p>
-            </div>
-            <span className="text-xs text-slate-400">Ver detalle →</span>
-          </Link>
-        </li>
-      ))}
-    </ul>
   );
 }

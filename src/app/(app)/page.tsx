@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getListings, getLowStockSummary } from "@/lib/data/listings";
-import { getRecentCleanings } from "@/lib/data/cleanings";
 
 export default async function HomePage() {
   const { profile } = await requireUser();
@@ -14,10 +13,9 @@ export default async function HomePage() {
 }
 
 async function AdminDashboard() {
-  const [listings, lowStock, recentCleanings] = await Promise.all([
+  const [listings, lowStock] = await Promise.all([
     getListings(),
     getLowStockSummary(),
-    getRecentCleanings(8),
   ]);
 
   const activeCount = listings.filter((l) => l.active).length;
@@ -38,14 +36,8 @@ async function AdminDashboard() {
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Link
-          href="/aseos/nuevo"
-          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
-        >
-          Registrar aseo
-        </Link>
-        <Link
           href="/bodegas"
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
         >
           Bodegas
         </Link>
@@ -87,35 +79,6 @@ async function AdminDashboard() {
           ))}
         </ul>
       )}
-
-      <h2 className="mt-8 text-sm font-semibold text-slate-700">
-        Últimos aseos registrados
-      </h2>
-      {recentCleanings.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">Sin aseos registrados aún.</p>
-      ) : (
-        <ul className="mt-2 divide-y divide-slate-200 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-          {recentCleanings.map((c) => (
-            <li key={c.id}>
-              <Link
-                href={`/aseos/${c.id}`}
-                className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-slate-50"
-              >
-                <div>
-                  <p className="font-medium text-slate-900">{c.listingName}</p>
-                  <p className="text-xs text-slate-500">
-                    {c.staffName} ·{" "}
-                    {new Date(c.cleaned_at).toLocaleString("es-CL", {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
@@ -129,29 +92,22 @@ async function StaffHome({ fullName }: { fullName: string }) {
         Hola{fullName ? `, ${fullName}` : ""}
       </h1>
       <p className="mt-1 text-sm text-slate-500">
-        Registra el aseo que acabas de hacer, con los insumos que usaste y
-        fotos de evidencia.
+        Entra a una propiedad para revisar su inventario y agregar
+        observaciones.
       </p>
 
-      <Link
-        href="/aseos/nuevo"
-        className="mt-4 block rounded-xl bg-slate-900 px-4 py-4 text-center text-base font-semibold text-white hover:bg-slate-800"
-      >
-        + Registrar aseo
-      </Link>
-
-      <h2 className="mt-8 text-sm font-semibold text-slate-700">
+      <h2 className="mt-6 text-sm font-semibold text-slate-700">
         Propiedades
       </h2>
       <ul className="mt-2 divide-y divide-slate-200 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         {listings.map((l) => (
           <li key={l.id}>
             <Link
-              href={`/aseos/nuevo?listing=${l.id}`}
+              href={`/propiedades/${l.id}`}
               className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-slate-50"
             >
               <span className="text-slate-900">{l.name}</span>
-              <span className="text-xs text-slate-400">Registrar aseo →</span>
+              <span className="text-xs text-slate-400">Ver inventario →</span>
             </Link>
           </li>
         ))}

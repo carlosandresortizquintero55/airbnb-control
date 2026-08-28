@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { uploadEvidenceFiles } from "@/lib/storage";
 import type { ItemCondition } from "@/lib/types/database";
@@ -147,4 +147,51 @@ export async function deleteInventoryItem(listingId: string, itemId: string) {
   await supabase.from("inventory_items").delete().eq("id", itemId);
   revalidatePath(`/propiedades/${listingId}`);
   redirect(`/propiedades/${listingId}?tab=inventario`);
+}
+
+export async function addInventoryItemNote(
+  listingId: string,
+  itemId: string,
+  formData: FormData,
+) {
+  const { user } = await requireUser();
+  const supabase = await createClient();
+
+  const note = String(formData.get("note") ?? "").trim();
+
+  if (!note) {
+    redirect(
+      `/propiedades/${listingId}/inventario/${itemId}?error=${encodeURIComponent("Escribe una observación.")}`,
+    );
+  }
+
+  const { error } = await supabase.from("inventory_item_notes").insert({
+    inventory_item_id: itemId,
+    note,
+    created_by: user.id,
+  });
+
+  if (error) {
+    redirect(
+      `/propiedades/${listingId}/inventario/${itemId}?error=${encodeURIComponent(error.message)}`,
+    );
+  }
+
+  revalidatePath(`/propiedades/${listingId}/inventario/${itemId}`);
+  redirect(`/propiedades/${listingId}/inventario/${itemId}`);
+}
+
+export async function deleteInventoryItemNote(
+  listingId: string,
+  itemId: string,
+  formData: FormData,
+) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const noteId = String(formData.get("note_id") ?? "");
+  await supabase.from("inventory_item_notes").delete().eq("id", noteId);
+
+  revalidatePath(`/propiedades/${listingId}/inventario/${itemId}`);
+  redirect(`/propiedades/${listingId}/inventario/${itemId}`);
 }

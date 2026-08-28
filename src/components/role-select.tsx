@@ -20,7 +20,7 @@ export function RoleSelect({
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
         className="rounded-md border border-slate-300 px-2 py-1 text-xs"
       >
-        <option value="staff">Personal de aseo</option>
+        <option value="staff">Personal</option>
         <option value="admin">Administrador</option>
       </select>
     </form>

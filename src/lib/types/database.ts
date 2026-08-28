@@ -198,6 +198,23 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      inventory_item_notes: {
+        Row: {
+          id: string;
+          inventory_item_id: string;
+          note: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          inventory_item_id: string;
+          note: string;
+          created_by?: string | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       listing_media: {
         Row: {
           id: string;

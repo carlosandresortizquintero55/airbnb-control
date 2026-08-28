@@ -5,8 +5,14 @@ import {
   getInventoryItem,
   getInventoryCategories,
   getInventoryMedia,
+  getInventoryItemNotes,
 } from "@/lib/data/inventory";
-import { updateInventoryItem, deleteInventoryItem } from "@/lib/actions/inventory";
+import {
+  updateInventoryItem,
+  deleteInventoryItem,
+  addInventoryItemNote,
+  deleteInventoryItemNote,
+} from "@/lib/actions/inventory";
 
 export default async function ItemDetallePage({
   params,
@@ -18,12 +24,13 @@ export default async function ItemDetallePage({
   const { id, itemId } = await params;
   const { error } = await searchParams;
 
-  const [{ profile }, listing, item, categories, media] = await Promise.all([
+  const [{ profile }, listing, item, categories, media, notes] = await Promise.all([
     getCurrentUser().then((r) => r ?? { profile: null }),
     getListing(id),
     getInventoryItem(itemId),
     getInventoryCategories(),
     getInventoryMedia(itemId),
+    getInventoryItemNotes(itemId),
   ]);
 
   if (!listing || !item) notFound();
@@ -31,6 +38,8 @@ export default async function ItemDetallePage({
 
   const updateItemAction = updateInventoryItem.bind(null, id, itemId);
   const deleteItemAction = deleteInventoryItem.bind(null, id, itemId);
+  const addNoteAction = addInventoryItemNote.bind(null, id, itemId);
+  const deleteNoteAction = deleteInventoryItemNote.bind(null, id, itemId);
 
   return (
     <div className="max-w-lg">
@@ -168,8 +177,67 @@ export default async function ItemDetallePage({
         </div>
       )}
 
+      <h2 className="mt-6 text-sm font-semibold text-slate-700">
+        Observaciones
+      </h2>
+      <p className="mt-0.5 text-xs text-slate-500">
+        Cualquiera puede agregar una observación. No se pueden editar ni
+        borrar (solo el administrador puede borrarlas).
+      </p>
+
+      <form action={addNoteAction} className="mt-2 flex flex-col gap-2">
+        <textarea
+          name="note"
+          required
+          rows={2}
+          placeholder="Ej. Falta 1 plato hondo, se rompió."
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+        />
+        <button
+          type="submit"
+          className="self-start rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+        >
+          Agregar observación
+        </button>
+      </form>
+
+      {notes.length === 0 ? (
+        <p className="mt-3 text-sm text-slate-500">Sin observaciones todavía.</p>
+      ) : (
+        <ul className="mt-3 space-y-2">
+          {notes.map((n) => (
+            <li
+              key={n.id}
+              className="rounded-lg bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-slate-200"
+            >
+              <p className="text-slate-700">{n.note}</p>
+              <div className="mt-1 flex items-center justify-between">
+                <p className="text-xs text-slate-400">
+                  {n.authorName} ·{" "}
+                  {new Date(n.created_at).toLocaleString("es-CL", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </p>
+                {isAdmin && (
+                  <form action={deleteNoteAction}>
+                    <input type="hidden" name="note_id" value={n.id} />
+                    <button
+                      type="submit"
+                      className="text-xs font-medium text-red-600 hover:text-red-700"
+                    >
+                      Borrar
+                    </button>
+                  </form>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {isAdmin && (
-        <form action={deleteItemAction} className="mt-4">
+        <form action={deleteItemAction} className="mt-6">
           <button
             type="submit"
             className="text-xs font-medium text-red-600 hover:text-red-700"

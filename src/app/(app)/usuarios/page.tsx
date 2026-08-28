@@ -19,8 +19,8 @@ export default async function UsuariosPage({
     <div className="max-w-lg">
       <h1 className="text-lg font-semibold text-slate-900">Usuarios</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Invita a tu personal de aseo para que pueda registrar aseos desde su
-        celular.
+        Invita a tu personal para que pueda agregar observaciones al
+        inventario desde su celular.
       </p>
 
       {error && (
@@ -66,7 +66,7 @@ export default async function UsuariosPage({
               defaultValue="staff"
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
-              <option value="staff">Personal de aseo</option>
+              <option value="staff">Personal</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
@@ -97,7 +97,7 @@ export default async function UsuariosPage({
                 {p.full_name || "Sin nombre"}
               </p>
               <p className="text-xs text-slate-500">
-                {p.role === "admin" ? "Administrador" : "Personal de aseo"}
+                {p.role === "admin" ? "Administrador" : "Personal"}
               </p>
             </div>
             {p.id !== current?.user.id && (

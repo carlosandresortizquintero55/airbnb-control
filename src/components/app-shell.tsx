@@ -9,13 +9,11 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/propiedades", label: "Propiedades" },
   { href: "/inventario", label: "Inventario" },
   { href: "/bodegas", label: "Bodegas" },
-  { href: "/aseos/nuevo", label: "Registrar aseo" },
   { href: "/usuarios", label: "Usuarios" },
 ];
 
 const STAFF_NAV: NavItem[] = [
   { href: "/", label: "Inicio" },
-  { href: "/aseos/nuevo", label: "Registrar aseo" },
   { href: "/propiedades", label: "Propiedades" },
   { href: "/inventario", label: "Inventario" },
 ];
@@ -39,7 +37,7 @@ export function AppShell({
             <p className="text-sm font-semibold text-slate-900">Control Airbnb</p>
             <p className="text-xs text-slate-500">
               {fullName || "Sin nombre"} ·{" "}
-              {role === "admin" ? "Administrador" : "Personal de aseo"}
+              {role === "admin" ? "Administrador" : "Personal"}
             </p>
           </div>
           <form action={signOut}>

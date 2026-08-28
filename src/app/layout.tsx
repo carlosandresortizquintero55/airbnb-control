@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Control Airbnb",
-  description: "Inventario, insumos y aseos de tus propiedades Airbnb",
+  description: "Inventario e insumos de tus propiedades Airbnb",
 };
 
 export const viewport: Viewport = {
