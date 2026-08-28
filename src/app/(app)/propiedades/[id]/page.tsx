@@ -11,7 +11,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { allocateListingStock } from "@/lib/actions/supplies";
 import { logMaintenance } from "@/lib/actions/maintenance";
 import { addListingMedia, deleteListingMedia } from "@/lib/actions/listing-media";
+import { deleteListing } from "@/lib/actions/listings";
 import { ConditionBadge, StockBadge } from "@/components/badges";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
 type Tab = "inventario" | "insumos" | "historial" | "mantenimiento" | "fotos";
 
@@ -50,12 +52,23 @@ export default async function PropiedadDetallePage({
           </p>
         </div>
         {isAdmin && (
-          <Link
-            href={`/propiedades/${id}/editar`}
-            className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
-          >
-            Editar
-          </Link>
+          <div className="flex shrink-0 gap-2">
+            <Link
+              href={`/propiedades/${id}/editar`}
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+            >
+              Editar
+            </Link>
+            <form action={deleteListing}>
+              <input type="hidden" name="listing_id" value={id} />
+              <ConfirmSubmitButton
+                confirmMessage={`¿Seguro que quieres borrar "${listing.name}"? Se pierde todo su inventario, insumos, fotos e historial de aseos. Esta acción no se puede deshacer.`}
+                className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+              >
+                Borrar
+              </ConfirmSubmitButton>
+            </form>
+          </div>
         )}
       </div>
 

@@ -162,3 +162,20 @@ export async function updateListing(listingId: string, formData: FormData) {
   revalidatePath(`/propiedades/${listingId}`);
   redirect(`/propiedades/${listingId}`);
 }
+
+export async function deleteListing(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const listingId = String(formData.get("listing_id") ?? "");
+
+  const { error } = await supabase.from("listings").delete().eq("id", listingId);
+
+  if (error) {
+    redirect(`/propiedades/${listingId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/propiedades");
+  revalidatePath("/inventario");
+  redirect("/propiedades");
+}
