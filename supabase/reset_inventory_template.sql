@@ -2,9 +2,6 @@
 -- (Cocina + General). Borra lo que hubiera antes en "Inventario" (no toca
 -- Insumos/Bodega, aseos, ni fotos).
 
--- Saca toallas grandes/pequeñas de Insumos/Bodega (quedan solo en Inventario).
-delete from public.supply_types where name in ('Toallas grandes', 'Toallas pequeñas');
-
 -- Categorías nuevas.
 insert into public.inventory_categories (name) values ('Cocina'), ('General')
 on conflict (name) do nothing;
